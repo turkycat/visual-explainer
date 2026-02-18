@@ -37,6 +37,10 @@ Before writing HTML, commit to a direction. Don't default to "dark theme with bl
 
 Vary the choice each time. If the last diagram was dark and technical, make the next one light and editorial. The swap test: if you replaced your styling with a generic dark theme and nobody would notice the difference, you haven't designed anything.
 
+**Theme override.** Check if `.claude/visual-explainer.local.md` exists in the project root and contains a `theme:` field in its YAML frontmatter. If it does, read `./themes/<theme-name>.md` from this skill's directory and use its CSS custom properties and Mermaid themeVariables instead of inventing your own palette. The theme controls colors only — you still choose fonts, layout, background atmosphere patterns, and animations freely. If the theme specifies dark-first, place its primary palette in `:root` and the alternate in the `@media (prefers-color-scheme)` query (and vice versa for light-first themes). If no config file exists or no theme is set, pick colors freely as usual.
+
+Available themes: `dracula`, `nord`, `one-dark`, `catppuccin-mocha`, `tokyo-night`, `gruvbox-dark`, `synthwave-84`, `solarized-light`, `github-light`, `catppuccin-latte`, `gruvbox-light`.
+
 ### 2. Structure
 
 **Read the reference template** before generating. Don't memorize it — read it each time to absorb the patterns.

@@ -83,10 +83,46 @@ It generates a full page with before/after architecture diagrams, KPI dashboard,
 
 `/project-recap` is designed for context-switching back to a project after days away. It scans recent git activity and produces an architecture snapshot, decision log, and cognitive debt hotspots. `/fact-check` takes any document that makes claims about code and verifies every one of them.
 
+## Themes
+
+You can set a preferred color palette so every generated page uses consistent colors. Create a config file in your project:
+
+```bash
+# .claude/visual-explainer.local.md
+---
+theme: dracula
+---
+```
+
+The agent reads this file and applies the theme's colors instead of picking its own. Fonts, layout, and animations are still chosen freely — only the color palette is fixed.
+
+**Available themes:**
+
+| Theme | Style | Primary mode |
+|-------|-------|-------------|
+| `dracula` | Purple/pink/cyan on cool dark | Dark |
+| `nord` | Arctic frost blues with aurora accents | Dark |
+| `one-dark` | Atom's blue/green/purple palette | Dark |
+| `catppuccin-mocha` | Soothing pastels on warm dark | Dark |
+| `tokyo-night` | Downtown Tokyo blues and purples | Dark |
+| `gruvbox-dark` | Retro groove warm oranges and greens | Dark |
+| `synthwave-84` | Neon pink/cyan/yellow on deep purple | Dark |
+| `solarized-light` | Ethan Schoonover's precise CIELAB palette | Light |
+| `github-light` | GitHub Primer clean blues and greens | Light |
+| `catppuccin-latte` | Soothing pastels on warm light | Light |
+| `gruvbox-light` | Retro groove faded earth tones | Light |
+
+Every theme includes both light and dark mode support via `prefers-color-scheme`.
+
+**Adding custom themes:** Create a new file in `themes/<name>.md` following the same structure as existing themes. Define CSS custom properties (using the same variable names) and Mermaid themeVariables.
+
 ## How It Works
 
 ```
 SKILL.md (workflow + design principles)
+    ↓
+themes/               ← optional: user-configured color palette
+├── dracula.md, nord.md, one-dark.md, ...
     ↓
 references/           ← agent reads before each generation
 ├── css-patterns.md   (layouts, animations, theming, depth tiers)

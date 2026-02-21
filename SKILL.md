@@ -81,6 +81,40 @@ async function renderMermaid() {
 
 **Static config override.** If `.claude/visual-explainer.local.md` has a `theme:` field, use that theme as the default selected theme in the picker (not as a static override — the picker is always present).
 
+**Font pair picker (always include).** Every generated page must also include a font pair switcher — a row of small `Aa` chips (each rendered in its respective display font) that swap `--font-sans` and `--font-mono` CSS variables on `<html>` and re-render Mermaid diagrams live. Place it in the same fixed panel as the theme picker, below the theme dots.
+
+Use `--font-sans` and `--font-mono` CSS variables throughout: `body { font-family: var(--font-sans), system-ui, sans-serif; }` and all monospace elements `font-family: var(--font-mono), monospace`. Pass the current `--font-mono` value into Mermaid's `fontFamily` themeVariable: `getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim()`.
+
+Default font pairs to offer (load all via a single Google Fonts URL):
+- **Syne / JetBrains Mono** — geometric, technical (default)
+- **Space Grotesk / Fira Code** — rounded, friendly
+- **IBM Plex Sans / IBM Plex Mono** — systematic, professional
+- **Fraunces / JetBrains Mono** — editorial serif
+- **DM Sans / DM Mono** — minimal, clean
+
+```js
+const fontPairs = {
+  'syne':          { sans: "'Syne'",          mono: "'JetBrains Mono'" },
+  'space-grotesk': { sans: "'Space Grotesk'", mono: "'Fira Code'" },
+  'ibm':           { sans: "'IBM Plex Sans'",  mono: "'IBM Plex Mono'" },
+  'fraunces':      { sans: "'Fraunces'",       mono: "'JetBrains Mono'" },
+  'dm':            { sans: "'DM Sans'",        mono: "'DM Mono'" },
+};
+
+document.querySelectorAll('.font-opt').forEach(opt => {
+  opt.addEventListener('click', function() {
+    const pair = fontPairs[this.dataset.font];
+    document.documentElement.style.setProperty('--font-sans', pair.sans);
+    document.documentElement.style.setProperty('--font-mono', pair.mono);
+    document.querySelectorAll('.font-opt').forEach(o => o.classList.remove('active'));
+    this.classList.add('active');
+    setTimeout(renderMermaid, 100); // re-render with new fontFamily
+  });
+});
+```
+
+**Note on Consolas:** Consolas is a Windows system font not available via Google Fonts. To include it, use `font-family: 'Consolas', 'Cascadia Code', 'Fira Code', monospace` — Cascadia Code (available on Google Fonts) as a near-equivalent fallback for Linux/macOS users.
+
 ### 2. Structure
 
 **Read the reference template** before generating. Don't memorize it — read it each time to absorb the patterns.

@@ -94,11 +94,11 @@ Use `--font-sans` and `--font-mono` CSS variables throughout: `body { font-famil
 
 Default font pairs to offer (load all via a single Google Fonts URL). List the default first in the HTML so it occupies the top-left chip position:
 - **Outfit / Cascadia Code** — clean, modern, excellent code readability **(default)**
-- **Syne / JetBrains Mono** — geometric, technical
 - **Space Grotesk / Fira Code** — rounded, friendly
 - **IBM Plex Sans / IBM Plex Mono** — systematic, professional
 - **Fraunces / JetBrains Mono** — editorial serif
 - **DM Sans / DM Mono** — minimal, clean
+- **Syne / JetBrains Mono** — geometric, technical
 
 Set matching defaults in `:root`: `--font-sans: 'Outfit'; --font-mono: 'Cascadia Code';`
 
@@ -107,11 +107,11 @@ Use Google Fonts only — never system fonts like Consolas (Windows-only). Casca
 ```js
 const fontPairs = {
   'cascadia':      { sans: "'Outfit'",         mono: "'Cascadia Code'" },
-  'syne':          { sans: "'Syne'",           mono: "'JetBrains Mono'" },
   'space-grotesk': { sans: "'Space Grotesk'",  mono: "'Fira Code'" },
   'ibm':           { sans: "'IBM Plex Sans'",  mono: "'IBM Plex Mono'" },
   'fraunces':      { sans: "'Fraunces'",       mono: "'JetBrains Mono'" },
   'dm':            { sans: "'DM Sans'",        mono: "'DM Mono'" },
+  'syne':          { sans: "'Syne'",           mono: "'JetBrains Mono'" },
 };
 
 document.querySelectorAll('.font-opt').forEach(opt => {

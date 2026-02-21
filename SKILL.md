@@ -37,9 +37,39 @@ Before writing HTML, commit to a direction. Don't default to "dark theme with bl
 
 Vary the choice each time. If the last diagram was dark and technical, make the next one light and editorial. The swap test: if you replaced your styling with a generic dark theme and nobody would notice the difference, you haven't designed anything.
 
-**Theme override.** Check if `.claude/visual-explainer.local.md` exists in the project root and contains a `theme:` field in its YAML frontmatter. If it does, read `./themes/<theme-name>.md` from this skill's directory and use its CSS custom properties and Mermaid themeVariables instead of inventing your own palette. The theme controls colors only — you still choose fonts, layout, background atmosphere patterns, and animations freely. If the theme specifies dark-first, place its primary palette in `:root` and the alternate in the `@media (prefers-color-scheme)` query (and vice versa for light-first themes). If no config file exists or no theme is set, pick colors freely as usual.
+**Interactive theme picker (always include).** Every generated page must include an interactive theme picker — a fixed row of 11 colored circle buttons (one per theme) that swap CSS custom properties on `<html>` and re-render Mermaid diagrams live. Read all 11 theme files from `./themes/` to extract the exact CSS variable values for each. The active theme button gets a white ring (`outline: 2px solid #fff`). Pick one theme as the default on load.
 
-Available themes: `dracula`, `nord`, `one-dark`, `catppuccin-mocha`, `tokyo-night`, `gruvbox-dark`, `synthwave-84`, `solarized-light`, `github-light`, `catppuccin-latte`, `gruvbox-light`.
+Available themes (read from `./themes/<name>.md`): `dracula`, `nord`, `one-dark`, `catppuccin-mocha`, `tokyo-night`, `gruvbox-dark`, `synthwave-84`, `solarized-light`, `github-light`, `catppuccin-latte`, `gruvbox-light`.
+
+**Implementation pattern:**
+```js
+const themes = {
+  'tokyo-night': { '--bg': '#1a1b26', '--surface': '#24283b', /* ... all vars */ },
+  // ... one entry per theme, values from theme files
+};
+const mermaidThemeVars = {
+  'tokyo-night': { background: '#1a1b26', primaryColor: '...', /* ... */ },
+  // ...
+};
+
+function applyTheme(name) {
+  const vars = themes[name];
+  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+  document.querySelectorAll('.theme-btn').forEach(b =>
+    b.style.outline = b.dataset.theme === name ? '2px solid #fff' : 'none');
+  // Re-render Mermaid diagrams
+  document.querySelectorAll('.mermaid[data-source]').forEach(el => {
+    el.innerHTML = el.dataset.source;
+    el.removeAttribute('data-processed');
+  });
+  mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: mermaidThemeVars[name] });
+  mermaid.run();
+}
+```
+
+Store original diagram source in `data-source` on each `.mermaid` element before first render. Place the picker in a fixed header bar or sticky top strip; keep it out of the document flow so it doesn't break page layout.
+
+**Static config override.** If `.claude/visual-explainer.local.md` has a `theme:` field, use that theme as the default selected theme in the picker (not as a static override — the picker is always present).
 
 ### 2. Structure
 
@@ -222,7 +252,7 @@ Every diagram is a single self-contained `.html` file. No external assets except
 Before delivering, verify:
 - **The squint test**: Blur your eyes. Can you still perceive hierarchy? Are sections visually distinct?
 - **The swap test**: Would replacing your fonts and colors with a generic dark theme make this indistinguishable from a template? If yes, push the aesthetic further.
-- **Both themes**: Toggle your OS between light and dark mode. Both should look intentional, not broken.
+- **Theme picker present**: Every page must have the interactive 11-theme picker. Verify buttons render and switching works (CSS vars swap, Mermaid re-renders).
 - **Information completeness**: Does the diagram actually convey what the user asked for? Pretty but incomplete is a failure.
 - **No overflow**: Resize the browser to different widths. No content should clip or escape its container. Every grid and flex child needs `min-width: 0`. Side-by-side panels need `overflow-wrap: break-word`. Never use `display: flex` on `<li>` for marker characters — it creates anonymous flex items that can't shrink, causing lines with many inline `<code>` badges to overflow. Use absolute positioning for markers instead. See the Overflow Protection section in `./references/css-patterns.md`.
 - **Mermaid zoom controls**: Every `.mermaid-wrap` container must have zoom controls (+/−/reset buttons), Ctrl/Cmd+scroll zoom, and click-and-drag panning. Complex diagrams render too small without them. The cursor should change to `grab` when zoomed in and `grabbing` while dragging. See `./references/css-patterns.md` for the full pattern.

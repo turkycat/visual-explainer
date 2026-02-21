@@ -69,15 +69,22 @@ function applyTheme(name) {
 
 // Initial render — must save source to data-source BEFORE replacing innerHTML
 async function renderMermaid() {
+  const themeKey = getCurrentTheme();
+  initMermaid(themeKey);
   for (const el of document.querySelectorAll('.mermaid')) {
     if (!el.dataset.source) el.dataset.source = el.textContent; // save once
-    const { svg } = await mermaid.render(el.id + '-svg', el.dataset.source);
+    // Mermaid 11 uses htmlLabels (foreignObject) — literal \n in source is NOT
+    // interpreted as a line break. Convert to <br/> before render.
+    const src = el.dataset.source.replaceAll('\\n', '<br/>');
+    const { svg } = await mermaid.render(el.id + '-svg', src);
     el.innerHTML = svg;
   }
 }
 ```
 
-**Critical:** Always save `el.textContent` to `el.dataset.source` before the first render. After render, `el.textContent` becomes SVG text — if `applyTheme` reads that instead of the original source, Mermaid throws "Syntax error in text". Place the picker in a fixed header bar or sticky top strip; keep it out of the document flow so it doesn't break page layout.
+**Critical:** Always save `el.textContent` to `el.dataset.source` before the first render. After render, `el.textContent` becomes SVG text — if re-render reads that instead of the original source, Mermaid throws "Syntax error in text".
+
+**`\n` in node labels:** Mermaid 11 renders flowchart labels as HTML inside `<foreignObject>`. Literal `\n` (two chars: backslash + n) in the diagram source is NOT converted to a line break — it appears as `\n` in the output. Always preprocess: `src.replaceAll('\\n', '<br/>')` before passing to `mermaid.render()`. Place the picker in a fixed header bar or sticky top strip; keep it out of the document flow so it doesn't break page layout.
 
 **Static config override.** If `.claude/visual-explainer.local.md` has a `theme:` field, use that theme as the default selected theme in the picker (not as a static override — the picker is always present).
 
@@ -85,17 +92,23 @@ async function renderMermaid() {
 
 Use `--font-sans` and `--font-mono` CSS variables throughout: `body { font-family: var(--font-sans), system-ui, sans-serif; }` and all monospace elements `font-family: var(--font-mono), monospace`. Pass the current `--font-mono` value into Mermaid's `fontFamily` themeVariable: `getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim()`.
 
-Default font pairs to offer (load all via a single Google Fonts URL):
-- **Syne / JetBrains Mono** — geometric, technical (default)
+Default font pairs to offer (load all via a single Google Fonts URL). List the default first in the HTML so it occupies the top-left chip position:
+- **Outfit / Cascadia Code** — clean, modern, excellent code readability **(default)**
+- **Syne / JetBrains Mono** — geometric, technical
 - **Space Grotesk / Fira Code** — rounded, friendly
 - **IBM Plex Sans / IBM Plex Mono** — systematic, professional
 - **Fraunces / JetBrains Mono** — editorial serif
 - **DM Sans / DM Mono** — minimal, clean
 
+Set matching defaults in `:root`: `--font-sans: 'Outfit'; --font-mono: 'Cascadia Code';`
+
+Use Google Fonts only — never system fonts like Consolas (Windows-only). Cascadia Code is the preferred developer mono and is available on Google Fonts.
+
 ```js
 const fontPairs = {
-  'syne':          { sans: "'Syne'",          mono: "'JetBrains Mono'" },
-  'space-grotesk': { sans: "'Space Grotesk'", mono: "'Fira Code'" },
+  'cascadia':      { sans: "'Outfit'",         mono: "'Cascadia Code'" },
+  'syne':          { sans: "'Syne'",           mono: "'JetBrains Mono'" },
+  'space-grotesk': { sans: "'Space Grotesk'",  mono: "'Fira Code'" },
   'ibm':           { sans: "'IBM Plex Sans'",  mono: "'IBM Plex Mono'" },
   'fraunces':      { sans: "'Fraunces'",       mono: "'JetBrains Mono'" },
   'dm':            { sans: "'DM Sans'",        mono: "'DM Mono'" },

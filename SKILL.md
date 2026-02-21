@@ -57,17 +57,27 @@ function applyTheme(name) {
   Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
   document.querySelectorAll('.theme-btn').forEach(b =>
     b.style.outline = b.dataset.theme === name ? '2px solid #fff' : 'none');
-  // Re-render Mermaid diagrams
-  document.querySelectorAll('.mermaid[data-source]').forEach(el => {
-    el.innerHTML = el.dataset.source;
-    el.removeAttribute('data-processed');
-  });
+  // Re-render Mermaid diagrams (read from data-source, NOT el.textContent —
+  // after first render el.textContent is SVG, not the diagram source)
   mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: mermaidThemeVars[name] });
-  mermaid.run();
+  for (const el of document.querySelectorAll('.mermaid')) {
+    el.removeAttribute('data-processed');
+    const { svg } = await mermaid.render(el.id + '-svg', el.dataset.source);
+    el.innerHTML = svg;
+  }
+}
+
+// Initial render — must save source to data-source BEFORE replacing innerHTML
+async function renderMermaid() {
+  for (const el of document.querySelectorAll('.mermaid')) {
+    if (!el.dataset.source) el.dataset.source = el.textContent; // save once
+    const { svg } = await mermaid.render(el.id + '-svg', el.dataset.source);
+    el.innerHTML = svg;
+  }
 }
 ```
 
-Store original diagram source in `data-source` on each `.mermaid` element before first render. Place the picker in a fixed header bar or sticky top strip; keep it out of the document flow so it doesn't break page layout.
+**Critical:** Always save `el.textContent` to `el.dataset.source` before the first render. After render, `el.textContent` becomes SVG text — if `applyTheme` reads that instead of the original source, Mermaid throws "Syntax error in text". Place the picker in a fixed header bar or sticky top strip; keep it out of the document flow so it doesn't break page layout.
 
 **Static config override.** If `.claude/visual-explainer.local.md` has a `theme:` field, use that theme as the default selected theme in the picker (not as a static override — the picker is always present).
 
